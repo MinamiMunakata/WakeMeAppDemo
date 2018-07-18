@@ -1,4 +1,4 @@
-package com.minami.android.wakemeup;
+package com.minami.android.wakemeapp;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
