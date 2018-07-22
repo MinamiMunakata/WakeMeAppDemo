@@ -50,6 +50,7 @@ public class MessagesListActivity extends AppCompatActivity {
             }
         });
         messagesList.setAdapter(adapter);
+        // TODO connect to database
     }
 
     @Override
