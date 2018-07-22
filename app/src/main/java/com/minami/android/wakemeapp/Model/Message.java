@@ -3,7 +3,6 @@ package com.minami.android.wakemeapp.Model;
 import android.support.annotation.Nullable;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
-import com.stfalcon.chatkit.commons.models.IUser;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import java.util.Date;
@@ -27,7 +26,7 @@ public class Message implements IMessage, MessageContentType.Image {
         this.createdAt = new Date();
     }
 
-    public Message(String id, User user, String text, Date createdAt) {
+    public Message(String id, Author user, String text, Date createdAt) {
         this.id = id;
         this.user = user;
         this.text = text;
@@ -45,7 +44,7 @@ public class Message implements IMessage, MessageContentType.Image {
     }
 
     @Override
-    public IUser getUser() {
+    public User getUser() {
         return user;
     }
 
