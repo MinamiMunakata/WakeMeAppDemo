@@ -1,10 +1,17 @@
 package com.minami.android.wakemeapp;
 
+import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.minami.android.wakemeapp.Model.Message;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
@@ -54,10 +61,35 @@ public class MessagesListActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.option_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    public void onComplete(@NonNull Task<Void> task) {
+                        // ...
+                        launchLoginActivity();
+                    }
+                });
+        return true;
+    }
+    @Override
     protected void onStart() {
         super.onStart();
+        // TODO read DB
 //        adapter.addToStart(, true);
 //        adapter = new MessagesListAdapter<>(senderId, imageLoader);
 //        messagesList.setAdapter(adapter);
+    }
+
+    private void launchLoginActivity() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

@@ -14,7 +14,7 @@ public class User implements IUser {
     private String id;
     private String name;
     private String avator;
-    private HashSet<User> friends;
+//    private HashSet<User> friends;
 
     public User() {
     }
@@ -22,7 +22,7 @@ public class User implements IUser {
     public User(String id, String name) {
         this.id = id;
         this.name = name;
-        friends = new HashSet<>();
+//        friends = new HashSet<>();
     }
 
     public String getId() {
@@ -46,15 +46,15 @@ public class User implements IUser {
         this.name = name;
     }
 
-    public HashSet<User> getFriends() {
-        return friends;
-    }
-
-    public void setFriends(HashSet<User> friends) {
-        this.friends = friends;
-    }
-
-    public void addFriends(User user) {
-        friends.add(user);
-    }
+//    public HashSet<User> getFriends() {
+//        return friends;
+//    }
+//
+//    public void setFriends(HashSet<User> friends) {
+//        this.friends = friends;
+//    }
+//
+//    public void addFriends(User user) {
+//        friends.add(user);
+//    }
 }

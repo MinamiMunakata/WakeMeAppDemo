@@ -23,9 +23,18 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.minami.android.wakemeapp.Controller.AuthenticationController;
+import com.minami.android.wakemeapp.Model.User;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static com.minami.android.wakemeapp.Controller.AuthenticationController.mUserRef;
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -43,28 +52,42 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // Choose authentication providers
-        providers = Arrays.asList(
-                new AuthUI.IdpConfig.PhoneBuilder().build(),
-                new AuthUI.IdpConfig.EmailBuilder().build(),
-                new AuthUI.IdpConfig.FacebookBuilder().build());
-        // Create and launch sign-in intent
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN);
-        AuthUI.getInstance()
-                .delete(this)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        // ...
-                    }
-                });
+//        //delete methods
+//        AuthUI.getInstance()
+//            .delete(this)
+//            .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                @Override
+//                public void onComplete(@NonNull Task<Void> task) {
+//                    if (task.isSuccessful()) {
+//                        // Deletion succeeded
+//                    } else {
+//                        // Deletion failed
+//                    }
+//                    // ...
+//                    Log.i(TAG, "onComplete: ---------------> onComplete");
+//                }
+//            });
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() != null) {
+            // already signed in
+            launchMessagesListActivity();
+        } else {
+            Log.i(TAG, "onCreate: nooooooooooooot sign iiiiiiiiiiiiiiiiin");
+            // not signed in
+            // Choose authentication providers
+            providers = Arrays.asList(
+                    new AuthUI.IdpConfig.PhoneBuilder().build(),
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.FacebookBuilder().build());
+            // Create and launch sign-in intent
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(providers)
+                            .build(),
+                    RC_SIGN_IN);
+        }
 //        mAuth.createUserWithEmailAndPassword(email, password)
 //                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
 //                    @Override
@@ -137,22 +160,51 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(TAG, "onActivityResult: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         super.onActivityResult(requestCode, resultCode, data);
 //        callbackManager.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
             if (resultCode == RESULT_OK) {
+                Log.i(TAG, "onActivityResult: oooooooooooooooooookaaaaaaaaaaaaaaaaaaayyyyyyyyyyyyyyyyyy");
                 // Successfully signed in
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                launchDialogsListActivity();
+                final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                final String id = user.getUid();
+
+                Log.i(TAG, "onActivityResult: ");
+//                AuthenticationController.writeNewUser(user);
+//                launchDialogsListActivity();
+
+                // check Real Time database
+                DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+                final DatabaseReference mUserRef = rootRef.child("Users");
+                mUserRef.child(id).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (!dataSnapshot.exists()){
+                            User newUser = new User(id, user.getDisplayName());
+                            mUserRef.child(id).setValue(newUser);
+                            Log.i(TAG, "onDataChange: --------> nooooooooooooooooooooooooooooooooooo");
+                        } else {
+                            Log.i(TAG, "onDataChange: --------> exist???");
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+                launchMessagesListActivity();
                 // ...
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
                 // response.getError().getErrorCode() and handle the error.
                 // ...
-                Log.i(TAG, "onActivityResult: " + response.getError().getErrorCode());
+                Log.e(TAG, "Sign-in error: " + response.getError());
             }
         }
     }
@@ -161,6 +213,45 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "onCreate: " + "Heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeey6");
+        if (mAuth.getCurrentUser() != null) {
+            // Successfully signed in
+            final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            final String id = user.getUid();
+
+            Log.i(TAG, "onActivityResult: ");
+//                AuthenticationController.writeNewUser(user);
+//                launchDialogsListActivity();
+
+            // check Real Time database
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+            final DatabaseReference mUserRef = rootRef.child("Users");
+            AuthenticationController.mUserRef.child(id).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()){
+                        User newUser = new User(id, user.getDisplayName());
+                        Log.i(TAG, "onDataChange: " + id);
+                        Log.i(TAG, "onDataChange: " + user.getDisplayName());
+                        Log.i(TAG, "onDataChange: --------> nooooooooooooooooooooooooooooooooooo");
+
+                        mUserRef.child(id).setValue(newUser);
+                    } else {
+                        Log.i(TAG, "onDataChange: --------> exist???");
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            // already signed in
+            launchMessagesListActivity();
+        } else {
+            // not signed in
+        }
 
         // Check if user is signed in (non-null) and update UI accordingly.
 //        FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -169,6 +260,12 @@ public class LoginActivity extends AppCompatActivity {
 
     private void launchDialogsListActivity() {
         Intent intent = new Intent(this, DialogsListActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void launchMessagesListActivity() {
+        Intent intent = new Intent(this, MessagesListActivity.class);
         startActivity(intent);
         finish();
     }
