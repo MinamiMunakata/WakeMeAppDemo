@@ -12,6 +12,7 @@ import android.widget.ListView;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.minami.android.wakemeapp.Model.Message;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
@@ -29,8 +30,6 @@ public class MessagesListActivity extends AppCompatActivity {
     private ImageLoader imageLoader;
     private MessagesList messagesList;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +41,8 @@ public class MessagesListActivity extends AppCompatActivity {
 //                Picasso.get(MessagesListActivity.this).load(url).into(imageView);
             }
         };
-        adapter =new MessagesListAdapter<Message>("id", null);
+        senderId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        adapter =new MessagesListAdapter<Message>(senderId, null);
         final User minami = new User("373", "minami");
         messagesList = findViewById(R.id.messagesList);
         MessageInput input = findViewById(R.id.input);

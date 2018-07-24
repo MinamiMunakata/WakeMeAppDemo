@@ -13,6 +13,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@id/input"
+        app:textAutoLink="all"
         />
 
     <com.stfalcon.chatkit.messages.MessageInput
