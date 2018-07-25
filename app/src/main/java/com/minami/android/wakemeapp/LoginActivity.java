@@ -34,7 +34,7 @@ import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
     private static final int RC_SIGN_IN = 123;
-    List<AuthUI.IdpConfig> providers;
+    private List<AuthUI.IdpConfig> providers;
     private AppEventsLogger logger;
     private static final String TAG = "LoginActivity";
     private FirebaseAuth mAuth;
@@ -46,13 +46,18 @@ public class LoginActivity extends AppCompatActivity {
         logger = AppEventsLogger.newLogger(this);
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
+            RealtimeDatabaseController.addUserToRealtimeDB(
+                    mAuth.getCurrentUser(),
+                    mAuth.getCurrentUser().getUid());
+            Log.i(TAG, "onCreate: -------------- 1");
             // already signed in
             launchMessagesListActivity();
         } else {
+            Log.i(TAG, "onCreate: -------------- 2");
+
             // not signed in
             // Choose authentication providers
             providers = Arrays.asList(
-                    new AuthUI.IdpConfig.PhoneBuilder().build(),
                     new AuthUI.IdpConfig.EmailBuilder().build(),
                     new AuthUI.IdpConfig.FacebookBuilder().build());
             // Create and launch sign-in intent
@@ -68,34 +73,22 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.i(TAG, "onCreate: -------------- 3");
+
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
-                final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                final String id = user.getUid();
-                // check Real Time database
-                DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-                final DatabaseReference mUserRef = rootRef.child("Users");
-                mUserRef.child(id).addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (!dataSnapshot.exists()){
-                            User newUser = new User(id, user.getDisplayName());
-                            mUserRef.child(id).setValue(newUser);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.e(TAG, "onCancelled: ", new Throwable(databaseError.getMessage()));
-                    }
-                });
-                launchMessagesListActivity();
+                Log.i(TAG, "onCreate: -------------- 4");
+
+                launchDialogsListActivity();
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
                 // response.getError().getErrorCode() and handle the error.
                 // ...
+                Log.i(TAG, "onCreate: -------------- 5");
+
                 Log.e(TAG, "Sign-in error: " + response.getError());
             }
         }
@@ -105,24 +98,17 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         final FirebaseUser user = mAuth.getCurrentUser();
+        Log.i(TAG, "onCreate: -------------- 6");
+
         if (user != null) {
             final String id = user.getUid();
             // check Real Time database
-            RealtimeDatabaseController.USER_REF.child(id).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (!dataSnapshot.exists()){
-                        RealtimeDatabaseController.writeNewUser(id, user.getDisplayName());
-                    }
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.e(TAG, "onCancelled: ", new Throwable(databaseError.getMessage()));
-                }
-            });
+            RealtimeDatabaseController.addUserToRealtimeDB(user, id);
             // already signed in
-            launchMessagesListActivity();
+            launchDialogsListActivity();
         } else {
+            Log.i(TAG, "onCreate: -------------- 7");
+
             // not signed in
             startActivityForResult(
                     AuthUI.getInstance()
@@ -134,13 +120,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void launchDialogsListActivity() {
-        Intent intent = new Intent(this, DialogsListActivity.class);
+        Intent intent = new Intent(LoginActivity.this, DialogsListActivity.class);
         startActivity(intent);
         finish();
     }
 
     private void launchMessagesListActivity() {
-        Intent intent = new Intent(this, MessagesListActivity.class);
+        Intent intent = new Intent(LoginActivity.this, MessagesListActivity.class);
         startActivity(intent);
         finish();
     }

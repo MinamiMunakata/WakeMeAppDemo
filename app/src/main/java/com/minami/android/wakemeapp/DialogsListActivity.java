@@ -2,30 +2,35 @@ package com.minami.android.wakemeapp;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
+import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
 import com.minami.android.wakemeapp.Model.Dialog;
-import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
-import com.stfalcon.chatkit.commons.models.IUser;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 public class DialogsListActivity extends AppCompatActivity {
-    int dialogs;
-    DialogsList dialogsList;
+    private int dialogs;
+    private DialogsList dialogsList;
+    private static final String TAG = "DialogListActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +76,7 @@ public class DialogsListActivity extends AppCompatActivity {
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
                         // ...
-                        launchLoginActivity();
+                        launchMessagesListActivity();
                     }
                 });
     }
@@ -80,5 +85,49 @@ public class DialogsListActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void launchMessagesListActivity() {
+        Intent intent = new Intent(this, MessagesListActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    public void showFindFriendDialog(View view) {
+        // build a dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.find_friend_dialog_layout, null);
+        builder.setView(dialogView);
+        // init
+        final EditText searchBox = view.findViewById(R.id.search_box);
+        Button searchButton = view.findViewById(R.id.search_by_email_button);
+        final TextView friendNameTextView = view.findViewById(R.id.friend_name_tv);
+        Button addButton = view.findViewById(R.id.add_button);
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (TextUtils.isEmpty(searchBox.getText().toString())){
+                    return;
+                }
+                RealtimeDatabaseController.searchUserByEmail(
+                        friendNameTextView,
+                        searchBox.getText().toString());
+            }
+        });
+        if (TextUtils.isEmpty(friendNameTextView.getText().toString())){
+            return;
+        }
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "onClick: ------------- add friend");
+            }
+        });
+
+
     }
 }
