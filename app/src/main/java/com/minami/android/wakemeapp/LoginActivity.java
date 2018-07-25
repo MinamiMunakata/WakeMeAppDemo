@@ -65,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
                     AuthUI.getInstance()
                             .createSignInIntentBuilder()
                             .setAvailableProviders(providers)
+                            .setIsSmartLockEnabled(false)
                             .build(),
                     RC_SIGN_IN);
         }
@@ -109,13 +110,13 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             Log.i(TAG, "onCreate: -------------- 7");
 
-            // not signed in
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(providers)
-                            .build(),
-                    RC_SIGN_IN);
+//            // not signed in
+//            startActivityForResult(
+//                    AuthUI.getInstance()
+//                            .createSignInIntentBuilder()
+//                            .setAvailableProviders(providers)
+//                            .build(),
+//                    RC_SIGN_IN);
         }
     }
 

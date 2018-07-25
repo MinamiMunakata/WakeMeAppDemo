@@ -2,6 +2,7 @@ package com.minami.android.wakemeapp;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,12 +14,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
 import com.minami.android.wakemeapp.Model.Dialog;
 import com.squareup.picasso.Picasso;
@@ -26,10 +31,13 @@ import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
-public class DialogsListActivity extends AppCompatActivity {
+import static com.minami.android.wakemeapp.Controller.RealtimeDatabaseController.USER_REF;
+
+public class DialogsListActivity extends AppCompatActivity implements View.OnClickListener{
     private int dialogs;
     private DialogsList dialogsList;
     private static final String TAG = "DialogListActivity";
+    private TextView friendNameTextView;
 
 
     @Override
@@ -48,6 +56,9 @@ public class DialogsListActivity extends AppCompatActivity {
         });
 
         dialogsList.setAdapter(dialogsListAdapter);
+
+        FloatingActionButton findFriendButton = findViewById(R.id.find_friend_button);
+        findFriendButton.setOnClickListener(this);
 
     }
 
@@ -94,16 +105,38 @@ public class DialogsListActivity extends AppCompatActivity {
     }
 
     public void showFindFriendDialog(View view) {
+
+    }
+    public void searchUserByEmail(final String EMAIL){
+        USER_REF.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
+                    if (EMAIL.equals(userSnapshot.child("email").getValue().toString())){
+                        friendNameTextView.setText(userSnapshot.child("name").getValue().toString());
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "onCancelled: ", databaseError.toException());
+            }
+        });
+    }
+
+    @Override
+    public void onClick(View view) {
+        Log.i(TAG, "showFindFriendDialog: --------------->  press???");
         // build a dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.find_friend_dialog_layout, null);
         builder.setView(dialogView);
         // init
-        final EditText searchBox = view.findViewById(R.id.search_box);
-        Button searchButton = view.findViewById(R.id.search_by_email_button);
-        final TextView friendNameTextView = view.findViewById(R.id.friend_name_tv);
-        Button addButton = view.findViewById(R.id.add_button);
+        final EditText searchBox = dialogView.findViewById(R.id.search_box);
+        ImageButton searchButton = dialogView.findViewById(R.id.search_by_email_button);
+        Button addButton = dialogView.findViewById(R.id.add_button);
+        friendNameTextView = dialogView.findViewById(R.id.friend_name_tv);
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
 
@@ -113,9 +146,7 @@ public class DialogsListActivity extends AppCompatActivity {
                 if (TextUtils.isEmpty(searchBox.getText().toString())){
                     return;
                 }
-                RealtimeDatabaseController.searchUserByEmail(
-                        friendNameTextView,
-                        searchBox.getText().toString());
+                searchUserByEmail(searchBox.getText().toString());
             }
         });
         if (TextUtils.isEmpty(friendNameTextView.getText().toString())){

@@ -35,7 +35,7 @@ public class RealtimeDatabaseController {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "onCancelled: ", new Throwable(databaseError.getMessage()));
+                Log.e(TAG, "onCancelled: ", databaseError.toException());
             }
         });
     }
@@ -45,20 +45,4 @@ public class RealtimeDatabaseController {
         USER_REF.child(id).setValue(newUser);
     }
 
-    public static void searchUserByEmail(final TextView FRIEND_NAME_TV, final String EMAIL){
-        USER_REF.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
-                    if (EMAIL.equals(userSnapshot.child("email").getValue().toString())){
-                        FRIEND_NAME_TV.setText(userSnapshot.child("name").getValue().toString());
-                    }
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e(TAG, "onCancelled: ", databaseError.toException());
-            }
-        });
-    }
 }
