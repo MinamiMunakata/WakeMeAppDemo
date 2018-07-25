@@ -19,6 +19,9 @@ public class Message implements IMessage, MessageContentType.Image {
     private User user;
     private Image image;
 
+    public Message() {
+    }
+
     public Message(String id, User user, String text) {
         this.id = id;
         this.user = user;

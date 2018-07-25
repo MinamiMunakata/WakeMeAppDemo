@@ -11,7 +11,7 @@ import java.util.List;
  * Created by Minami on 2018/07/19.
  */
 
-public class Dialog implements IDialog {
+public class Dialog extends Room implements IDialog {
     private String id;
     private String dialogPhoto;
     private String dialogName;
@@ -20,6 +20,10 @@ public class Dialog implements IDialog {
     private int unreadCount;
 
     public Dialog() {
+    }
+
+    public Dialog(String id, ArrayList<User> member) {
+        super(id, member);
     }
 
     public Dialog(String id, String name, String photo,

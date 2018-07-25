@@ -26,10 +26,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
 import com.minami.android.wakemeapp.Model.Dialog;
+import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
+
+import java.util.ArrayList;
 
 import static com.minami.android.wakemeapp.Controller.RealtimeDatabaseController.USER_REF;
 
@@ -44,16 +47,26 @@ public class DialogsListActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
-        Dialog dialog = new Dialog();
+        User minami = new User("373", "minami");
+        ArrayList<User> member = new ArrayList<>();
+        member.add(minami);
+        Dialog dialog = new Dialog("123456789", member);
         dialogs = R.id.dialogsList;
         dialogsList = findViewById(dialogs);
-        DialogsListAdapter dialogsListAdapter = new DialogsListAdapter<>(dialogs, new ImageLoader() {
+        DialogsListAdapter dialogsListAdapter = new DialogsListAdapter(new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
-                //If you using another library - write here your way to load image
                 Picasso.get().load(url).into(imageView);
             }
         });
+//        DialogsListAdapter dialogsListAdapter = new DialogsListAdapter<>(dialogs, new ImageLoader() {
+//            @Override
+//            public void loadImage(ImageView imageView, String url) {
+//                //If you using another library - write here your way to load image
+//                Picasso.get().load(url).into(imageView);
+//            }
+//        });
+        dialogsListAdapter.addItem(dialog);
 
         dialogsList.setAdapter(dialogsListAdapter);
 
@@ -70,6 +83,7 @@ public class DialogsListActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // logout
         AuthUI.getInstance()
                 .signOut(this)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -81,16 +95,6 @@ public class DialogsListActivity extends AppCompatActivity implements View.OnCli
         return true;
     }
 
-    public void logout(View view) {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    public void onComplete(@NonNull Task<Void> task) {
-                        // ...
-                        launchMessagesListActivity();
-                    }
-                });
-    }
 
     private void launchLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
@@ -104,9 +108,6 @@ public class DialogsListActivity extends AppCompatActivity implements View.OnCli
         finish();
     }
 
-    public void showFindFriendDialog(View view) {
-
-    }
     public void searchUserByEmail(final String EMAIL){
         USER_REF.addValueEventListener(new ValueEventListener() {
             @Override
