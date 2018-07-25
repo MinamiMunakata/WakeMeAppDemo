@@ -11,23 +11,23 @@ import java.util.List;
  * Created by Minami on 2018/07/19.
  */
 
-public class Dialog extends Room implements IDialog {
+public class Dialog implements IDialog {
     private String id;
     private String dialogPhoto;
     private String dialogName;
-    private ArrayList<User> users;
+    private List<User> users;
     private IMessage lastMessage;
     private int unreadCount;
 
     public Dialog() {
     }
 
-    public Dialog(String id, ArrayList<User> member) {
-        super(id, member);
+    public Dialog(String id, List<User> users) {
+        this.id = id;
+        this.users = users;
     }
-
     public Dialog(String id, String name, String photo,
-                  ArrayList<User> users, IMessage lastMessage, int unreadCount) {
+                  List<User> users, IMessage lastMessage, int unreadCount) {
 
         this.id = id;
         this.dialogName = name;

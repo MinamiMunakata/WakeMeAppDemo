@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Room {
     private String id;
-    private ArrayList<User> member;
+    private List<User> member;
     private List<Message> messages;
 
     public Room() {
@@ -28,7 +28,7 @@ public class Room {
         this.id = id;
     }
 
-    public ArrayList<User> getMember() {
+    public List<User> getMember() {
         return member;
     }
 

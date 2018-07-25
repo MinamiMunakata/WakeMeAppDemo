@@ -24,7 +24,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
 import com.minami.android.wakemeapp.Model.Dialog;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
@@ -33,12 +32,12 @@ import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.minami.android.wakemeapp.Controller.RealtimeDatabaseController.USER_REF;
 
 public class DialogsListActivity extends AppCompatActivity implements View.OnClickListener{
-    private int dialogs;
-    private DialogsList dialogsList;
+    private DialogsList dialogsListView;
     private static final String TAG = "DialogListActivity";
     private TextView friendNameTextView;
 
@@ -48,27 +47,21 @@ public class DialogsListActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
         User minami = new User("373", "minami");
-        ArrayList<User> member = new ArrayList<>();
+        User natsumi = new User("723", "natsumi");
+        List<User> member = new ArrayList<>();
         member.add(minami);
+        member.add(natsumi);
         Dialog dialog = new Dialog("123456789", member);
-        dialogs = R.id.dialogsList;
-        dialogsList = findViewById(dialogs);
+
+        dialogsListView = findViewById(R.id.dialogsList);
         DialogsListAdapter dialogsListAdapter = new DialogsListAdapter(new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
                 Picasso.get().load(url).into(imageView);
             }
         });
-//        DialogsListAdapter dialogsListAdapter = new DialogsListAdapter<>(dialogs, new ImageLoader() {
-//            @Override
-//            public void loadImage(ImageView imageView, String url) {
-//                //If you using another library - write here your way to load image
-//                Picasso.get().load(url).into(imageView);
-//            }
-//        });
         dialogsListAdapter.addItem(dialog);
-
-        dialogsList.setAdapter(dialogsListAdapter);
+        dialogsListView.setAdapter(dialogsListAdapter);
 
         FloatingActionButton findFriendButton = findViewById(R.id.find_friend_button);
         findFriendButton.setOnClickListener(this);
