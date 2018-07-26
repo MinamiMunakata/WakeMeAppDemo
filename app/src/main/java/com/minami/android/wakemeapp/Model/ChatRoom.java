@@ -7,15 +7,15 @@ import java.util.List;
  * Created by Minami on 2018/07/24.
  */
 
-public class Room {
+public class ChatRoom {
     private String id;
     private List<User> member;
     private List<Message> messages;
 
-    public Room() {
+    public ChatRoom() {
     }
 
-    public Room(String id, ArrayList<User> member) {
+    public ChatRoom(String id, List<User> member) {
         this.id = id;
         this.member = member;
     }
@@ -32,7 +32,7 @@ public class Room {
         return member;
     }
 
-    public void setMember(ArrayList<User> member) {
+    public void setMember(List<User> member) {
         this.member = member;
     }
 

@@ -26,6 +26,11 @@ public class Dialog implements IDialog {
         this.id = id;
         this.users = users;
     }
+
+    //    public Dialog(String id, List<User> member) {
+//        super(id, member);
+//    }
+
     public Dialog(String id, String name, String photo,
                   List<User> users, IMessage lastMessage, int unreadCount) {
 

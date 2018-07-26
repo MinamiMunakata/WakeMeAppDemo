@@ -49,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
             RealtimeDatabaseController.addUserToRealtimeDB(
                     mAuth.getCurrentUser(),
                     mAuth.getCurrentUser().getUid());
+
             Log.i(TAG, "onCreate: -------------- 1");
             // already signed in
             launchMessagesListActivity();
