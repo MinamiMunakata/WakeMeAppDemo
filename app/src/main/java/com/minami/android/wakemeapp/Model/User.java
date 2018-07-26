@@ -1,23 +1,26 @@
 package com.minami.android.wakemeapp.Model;
 
+import android.util.Log;
+
 import com.stfalcon.chatkit.commons.models.IUser;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.firebase.ui.auth.ui.email.CheckEmailFragment.TAG;
+
 /**
  * Created by Minami on 2018/07/19.
  */
 
 public class User implements IUser {
-
     private String id;
     private String name;
     private String avator;
     private String email;
     private List<ChatRoom> chatRooms;
-    private List<User> friendsList = new ArrayList<>();
+    private List<String> friendsIdList = new ArrayList<>();
 
     public User() {
     }
@@ -75,22 +78,39 @@ public class User implements IUser {
         chatRooms.add(chatRoom);
     }
 
-    public List<User> getFriendsList() {
-        return friendsList;
+    public List<String> getFriendsIdList() {
+        return friendsIdList;
     }
 
-    public void setFriendsList(List<User> friendsList) {
-        this.friendsList = friendsList;
+    public void setFriendsIdList(List<String> friendsIdList) {
+        this.friendsIdList = friendsIdList;
     }
 
-    public void addFriendToList(User friend){
-        if (friendsList.size() > 0) {
-            if (!friendsList.contains(friend)){
-                friendsList.add(friend);
+    public void addFriendToList(String friendId){
+        List<String> updatedFriendsIdList = new ArrayList<>();
+        if (friendsIdList.size() > 0) {
+            HashSet<String> set = new HashSet<>();
+            for (String id: friendsIdList){
+                if (!set.contains(id)){
+                    set.add(id);
+                    updatedFriendsIdList.add(id);
+                    Log.i(TAG, "addFriendToList: addddddd");
+                }
+            }
+            if (!set.contains(friendId) && !friendId.equals(this.id)){
+                updatedFriendsIdList.add(friendId);
+                setFriendsIdList(updatedFriendsIdList);
             }
         } else {
-            friendsList.add(friend);
+
+            friendsIdList.add(friendId);
+
+            Log.i(TAG, "addFriendToList: " + friendId);
+            Log.i(TAG, "addFriendToList: " + this.id);
+            Log.i(TAG, "addFriendToList: " + friendsIdList);
+            Log.i(TAG, "addFriendToList: heeeeeeeeeeeeeeey");
         }
+
     }
 
     @Override
@@ -100,12 +120,6 @@ public class User implements IUser {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (this.getClass() != obj.getClass()) {
-            return false;
-        }
         if (this.getId().equals(((User)obj).getId())){
             return true;
         }

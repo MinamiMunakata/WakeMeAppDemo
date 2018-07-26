@@ -1,32 +1,16 @@
 package com.minami.android.wakemeapp;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
 import com.facebook.appevents.AppEventsLogger;
-import com.facebook.login.widget.LoginButton;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
-import com.minami.android.wakemeapp.Model.User;
+import com.minami.android.wakemeapp.Config.Config;
+import com.minami.android.wakemeapp.Controller.DBController;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,11 +28,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         logger = AppEventsLogger.newLogger(this);
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() != null) {
-            RealtimeDatabaseController.addUserToRealtimeDB(
-                    mAuth.getCurrentUser(),
-                    mAuth.getCurrentUser().getUid());
+        if (Config.CURRENT_USER != null) {
+            DBController.addUserToDB(
+                    Config.CURRENT_USER,
+                    Config.CURRENT_USER.getUid());
 
             Log.i(TAG, "onCreate: -------------- 1");
             // already signed in
@@ -99,13 +82,12 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        final FirebaseUser user = mAuth.getCurrentUser();
         Log.i(TAG, "onCreate: -------------- 6");
 
-        if (user != null) {
-            final String id = user.getUid();
+        if (Config.CURRENT_USER != null) {
+            final String id = Config.CURRENT_USER.getUid();
             // check Real Time database
-            RealtimeDatabaseController.addUserToRealtimeDB(user, id);
+            DBController.addUserToDB(Config.CURRENT_USER, id);
             // already signed in
             launchDialogsListActivity();
         } else {

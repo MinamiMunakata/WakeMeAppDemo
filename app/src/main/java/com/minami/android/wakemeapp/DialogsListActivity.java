@@ -2,7 +2,7 @@ package com.minami.android.wakemeapp;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,12 +22,10 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import com.minami.android.wakemeapp.Controller.RealtimeDatabaseController;
 import com.minami.android.wakemeapp.Model.ChatRoom;
 import com.minami.android.wakemeapp.Model.Dialog;
 import com.minami.android.wakemeapp.Model.User;
@@ -40,25 +38,32 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static com.minami.android.wakemeapp.Controller.RealtimeDatabaseController.CHAT_ROOM_REF;
-import static com.minami.android.wakemeapp.Controller.RealtimeDatabaseController.USER_REF;
+import static com.minami.android.wakemeapp.Config.Config.CURRENT_USER;
+import static com.minami.android.wakemeapp.Controller.DBController.CHAT_ROOM_REF;
+import static com.minami.android.wakemeapp.Controller.DBController.EMAIL;
+import static com.minami.android.wakemeapp.Controller.DBController.FRIENDS_ID_LIST;
+import static com.minami.android.wakemeapp.Controller.DBController.ID;
+import static com.minami.android.wakemeapp.Controller.DBController.NAME;
+import static com.minami.android.wakemeapp.Controller.DBController.USER_REF;
 
 public class DialogsListActivity extends AppCompatActivity {
     private DialogsList dialogsListView;
     private static final String TAG = "DialogListActivity";
     private TextView friendNameTextView;
     private List<User> member;
-    private final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private HashSet<User> set;
     private DialogsListAdapter dialogsListAdapter;
     private EditText searchBox;
     private AlertDialog alertDialog;
-
+    private ImageButton searchButton;
+    private Button addButton;
+    private ArrayList<User> currentUserHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
+        currentUserHolder = new ArrayList<>();
         member = new ArrayList<>();
         set = new HashSet<>();
         dialogsListView = findViewById(R.id.dialogsList);
@@ -69,8 +74,6 @@ public class DialogsListActivity extends AppCompatActivity {
             }
         });
         dialogsListView.setAdapter(dialogsListAdapter);
-
-
     }
 
     @Override
@@ -107,6 +110,8 @@ public class DialogsListActivity extends AppCompatActivity {
     }
 
     public void showFindFriendDialog(View view) {
+        member.clear();
+        set.clear();
         Log.i(TAG, "showFindFriendDialog: --------------->  press???");
         // build a dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -115,7 +120,9 @@ public class DialogsListActivity extends AppCompatActivity {
         builder.setView(dialogView);
         // init
         searchBox = dialogView.findViewById(R.id.search_box);
-        ImageButton searchButton = dialogView.findViewById(R.id.search_by_email_button);
+        searchButton = dialogView.findViewById(R.id.search_by_email_button);
+        addButton = dialogView.findViewById(R.id.add_button);
+        addButton.setEnabled(false);
         friendNameTextView = dialogView.findViewById(R.id.friend_name_tv);
         alertDialog = builder.create();
         alertDialog.show();
@@ -127,74 +134,133 @@ public class DialogsListActivity extends AppCompatActivity {
                     toast("Please enter an email address");
                     return;
                 }
-                searchUserByEmail(searchBox.getText().toString());
+                searchFriendByEmail(searchBox.getText().toString());
+                Log.i(TAG, "onClick: ---------------------searchFriendByEmail");
             }
         });
     }
 
-    public void searchUserByEmail(final String EMAIL){
-        Log.i(TAG, "searchUserByEmail: ----------------");
+
+    public void searchFriendByEmail(final String email){
+        member.clear();
+        set.clear();
+//        USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
+//                    if (userSnapshot.child(EMAIL).getValue().equals(email)){
+//                        friendNameTextView.setText(userSnapshot.child(NAME).getValue().toString());
+//                        // if already friends or not
+//                        String mFriendId = userSnapshot.child(ID).getValue().toString();
+//                        if (mFriendId.equals(CURRENT_USER.getUid())){
+//                            toast("Search your friends");
+//                            addButton.setEnabled(false);
+//                        } else {
+//                            User mFriend = userSnapshot.getValue(User.class);
+//                            User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
+//                            if (userSnapshot.child(FRIENDS_ID_LIST).getValue() != null) {
+//                                if (!mFriend.getFriendsIdList().contains(CURRENT_USER.getUid())){
+//                                    toast("new");
+//                                    addButton.setEnabled(true);
+//                                    addMember(mFriend);
+//                                    addMember(currentUser);
+//                                } else {
+//                                    toast("Search new user");
+//                                    addButton.setEnabled(false);
+//                                }
+//                            } else {
+//                                toast("new");
+//                                addButton.setEnabled(true);
+//                                addMember(mFriend);
+//                                addMember(currentUser);
+//                            }
+//                            break;
+//                        }
+//
+//                    }
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                if (databaseError != null){
+//                    Log.e(TAG, "onCancelled: ", databaseError.toException() );
+//                }
+//            }
+//        });
         USER_REF.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User mUser = null;
-                User friend = null;
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
-                    if (EMAIL.equals(userSnapshot.child("email").getValue().toString())){
-                        friendNameTextView.setText(userSnapshot.child("name").getValue().toString());
-                        friend = userSnapshot.getValue(User.class);
-                        Log.i(TAG, "onDataChange: ------ " + friend + "FEIIIIIIIEEEN");
-                    }
-                    if (userSnapshot.child("id").getValue().toString().equals(currentUser.getUid())){
-                        Log.i(TAG, "onDataChange: equal----- equal----- equal----- equal-----");
-                        mUser = userSnapshot.getValue(User.class);
-                    }
-                }
-                Log.i(TAG, "onDataChange: HeEEEEEY");
-                Log.i(TAG, "onDataChange: " + mUser + ": " + friend);
-                if (mUser != null && friend != null) {
-                    Log.i(TAG, "onDataChange: nuuuuuuuuuuuuuuuulllll???");
-                    if (mUser.getFriendsList().size() > 0 &&
-                            mUser.getFriendsList().contains(friend)) {
-                        toast(friendNameTextView.getText().toString() +
-                                "is already your friend");
-                        return;
+                    if (userSnapshot.child(EMAIL).getValue().equals(email)){
+                        friendNameTextView.setText(userSnapshot.child(NAME).getValue().toString());
+                        // if already friends or not
+                        String mFriendId = userSnapshot.child(ID).getValue().toString();
+                        if (mFriendId.equals(CURRENT_USER.getUid())){
+                            toast("Search your friends");
+                            addButton.setEnabled(false);
+                        } else {
+                            User mFriend = userSnapshot.getValue(User.class);
+                            User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
+                            if (userSnapshot.child(FRIENDS_ID_LIST).getValue() != null) {
+                                if (!mFriend.getFriendsIdList().contains(CURRENT_USER.getUid())){
+                                    toast("new");
+                                    addButton.setEnabled(true);
+                                    Log.i(TAG, "onDataChange: " + mFriendId);
+                                    Log.i(TAG, "onDataChange: " + mFriend);
+                                    Log.i(TAG, "onDataChange: " + currentUser);
+                                    mFriend.addFriendToList(CURRENT_USER.getUid());
+                                    currentUser.addFriendToList(mFriendId);
+                                    member.add(mFriend);
+                                    member.add(currentUser);
+                                } else {
+                                    toast("Search new user");
+                                    addButton.setEnabled(false);
+                                }
+                            } else {
+                                toast("new");
+                                addButton.setEnabled(true);
+                                Log.i(TAG, "onDataChange: " + mFriendId);
+                                Log.i(TAG, "onDataChange: " + mFriend);
+                                Log.i(TAG, "onDataChange: " + currentUser);
+                                mFriend.addFriendToList(CURRENT_USER.getUid());
+                                currentUser.addFriendToList(mFriendId);
+                                member.add(mFriend);
+                                member.add(currentUser);
 
-                    } else {
-                        Log.i(TAG, "onDataChange: adddddddddddddddddd????????");
-                        mUser.addFriendToList(friend);
-                        addMember(mUser);
+                            }
+                            break;
+                        }
+
+                    } else if (member.size() < 2){
+                        // no match user
+                        toast("No one is found");
                     }
-                    if (friend.getFriendsList().size() > 0 ||
-                            !friend.getFriendsList().contains(mUser)) {
-                        Log.i(TAG, "onDataChange: -------contain????????");
-                        friend.addFriendToList(mUser);
-                        addMember(friend);
-                    }
-                }
-                if (TextUtils.isEmpty(friendNameTextView.getText().toString())){
-                    toast("The email address is not found.");
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e(TAG, "onCancelled: ", databaseError.toException());
+                if (databaseError != null){
+                    Log.e(TAG, "onCancelled: ", databaseError.toException() );
+                }
             }
         });
+        Log.i(TAG, "searchFriendByEmail: end of --------------------------->");
     }
 
-    public void addMember(User user) {
-        Log.i(TAG, "addMember: -------------------------");
+    private void addMember(User user){
         if (!set.contains(user)){
             member.add(user);
             set.add(user);
-            Log.i(TAG, "addMember: added!!!!!!!!!!!");
-        } else {
-            member.clear();
-            set.clear();
-            toast("Please select other one else");
         }
-        Log.i(TAG, "addMember: " + member.toString());
+    }
+
+    private void addCurrentUser(User user){
+        currentUserHolder.clear();
+        currentUserHolder.add(user);
     }
 
     private void toast(String msg) {
@@ -205,38 +271,57 @@ public class DialogsListActivity extends AppCompatActivity {
     }
 
     public void createDialog(View view) {
-        if (TextUtils.isEmpty(friendNameTextView.getText().toString())){
-            toast("Search your friends");
-            member.clear();
-            return;
-        }
-        if (member.size() < 2) {
-            toast("Search your friends");
-            member.clear();
-            Log.i(TAG, "createDialog: member: " + member.toString());
-            return;
-        }
-        Log.i(TAG, "createDialog: ------------------");
-        searchBox.setText("");
-        friendNameTextView.setText("");
-        Log.i(TAG, "createDialog: " + member.toString());
-        for (User user: member) {
-            Log.i(TAG, "createDialog: " + user.getId());
-            Log.i(TAG, "createDialog: " + user);
-            Log.i(TAG, "createDialog: " + user.getFriendsList().toString());
-            Log.i(TAG, "createDialog: --------------------------------------");
-        }
-
-//        for (User user: member){
-//            USER_REF.child(user.getId()).setValue(user);
+//         no match user
+//        if (TextUtils.isEmpty(friendNameTextView.getText().toString())) {
+//            toast("No one is found");
 //        }
-//        String id = CHAT_ROOM_REF.push().getKey();
-//        ChatRoom mChatRoom = new ChatRoom(id, member);
-//        CHAT_ROOM_REF.child(id).setValue(mChatRoom);
-//        Dialog dialog = new Dialog(id, member);
-//        dialogsListAdapter.addItem(dialog);
-//        dialogsListAdapter.notifyDataSetChanged();
+//        Log.i(TAG, "createDialog: How are you?");
+//        USER_REF.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                Log.i(TAG, "onDataChange: Excuse me???");
+//                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
+//                    if (userSnapshot.child(EMAIL).getValue().equals(searchBox.getText().toString())) {
+//                        String mFriendId = userSnapshot.child(ID).getValue().toString();
+//                        Log.i(TAG, "onDataChange: " + mFriendId);
+//                        User mFriend = userSnapshot.getValue(User.class);
+//                        Log.i(TAG, "onDataChange: " + mFriend);
+//                        User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
+//                        Log.i(TAG, "onDataChange: " + currentUser);
+//                        mFriend.addFriendToList(CURRENT_USER.getUid());
+//                        currentUser.addFriendToList(mFriendId);
+//                        member.add(mFriend);
+//                        member.add(currentUser);
+//                    }
+//                }
+//            }
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                if (databaseError != null){
+//                    Log.e(TAG, "onCancelled: ", databaseError.toException() );
+//                }
+//            }
+//        });
+        updateFriendList();
+        String chat_id = CHAT_ROOM_REF.push().getKey();
+        ChatRoom mChatRoom = new ChatRoom(chat_id, member);
+        CHAT_ROOM_REF.child(chat_id).setValue(mChatRoom);
+        Dialog dialog = new Dialog(chat_id, member);
+        dialogsListAdapter.addItem(dialog);
+        dialogsListAdapter.notifyDataSetChanged();
         alertDialog.dismiss();
+    }
 
+    private void updateFriendList() {
+        for (User user: member){
+            Log.i(TAG, "updateFriendList: " + user.getFriendsIdList());
+            USER_REF.child(user.getId()).child(FRIENDS_ID_LIST).setValue(user.getFriendsIdList(), new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                    toast("Successfully added");
+                }
+            });
+        }
+        addButton.setEnabled(false);
     }
 }
