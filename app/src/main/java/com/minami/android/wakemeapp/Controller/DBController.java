@@ -23,7 +23,8 @@ public class DBController {
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String EMAIL = "email";
-    public static final String CHAT_ROOMS_LIST = "chatRooms";
+    public static final String MEMBER = "member";
+    public static final String CHAT_ROOMS_LIST = "chatRoomsIdList";
     public static final String FRIENDS_ID_LIST = "friendsIdList";
     public static final DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(USERS);
     public static final DatabaseReference MESSAGE_REF = FirebaseDatabase.getInstance().getReference(MESSAGES);

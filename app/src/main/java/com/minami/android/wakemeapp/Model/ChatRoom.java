@@ -9,8 +9,9 @@ import java.util.List;
 
 public class ChatRoom {
     private String id;
-    private List<User> member;
-    private List<Message> messages;
+    private List<User> member = new ArrayList<>();
+    private List<Message> messages = new ArrayList<>();
+    public static final String CHAT_ROOM_ID = "ChatRoomId";
 
     public ChatRoom() {
     }
@@ -18,6 +19,20 @@ public class ChatRoom {
     public ChatRoom(String id, List<User> member) {
         this.id = id;
         this.member = member;
+    }
+
+    public ChatRoom(String id, List<User> member, List<Message> messages) {
+        this.id = id;
+        this.member = member;
+        this.messages = messages;
+    }
+    public boolean containsCurrentUser(String currentUserId){
+        for (User user: member){
+            if (user.getId().equals(currentUserId)){
+                return true;
+            }
+        }
+        return false;
     }
 
     public String getId() {
@@ -47,8 +62,8 @@ public class ChatRoom {
     @Override
     public String toString() {
         String participants = "";
-        for (User u: member){
-            participants += " : " + u;
+        for (User user : member) {
+            participants += " : " + user;
         }
         return participants;
     }

@@ -33,6 +33,7 @@ import com.minami.android.wakemeapp.Model.Dialog;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
+import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
@@ -44,6 +45,7 @@ import static com.minami.android.wakemeapp.Controller.DBController.CHAT_ROOM_REF
 import static com.minami.android.wakemeapp.Controller.DBController.EMAIL;
 import static com.minami.android.wakemeapp.Controller.DBController.FRIENDS_ID_LIST;
 import static com.minami.android.wakemeapp.Controller.DBController.ID;
+import static com.minami.android.wakemeapp.Controller.DBController.MEMBER;
 import static com.minami.android.wakemeapp.Controller.DBController.NAME;
 import static com.minami.android.wakemeapp.Controller.DBController.USER_REF;
 
@@ -59,16 +61,17 @@ public class DialogsListActivity extends AppCompatActivity {
     private ImageButton searchButton;
     private Button addButton;
     private ArrayList<User> currentUserHolder;
-    private FirebaseUser CURRENT_USER;
+    private FirebaseUser currentUser;
+    private List<Dialog> dialogs;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
-        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        currentUserHolder = new ArrayList<>();
+        dialogs = new ArrayList<>();
         member = new ArrayList<>();
         set = new HashSet<>();
         dialogsListView = findViewById(R.id.dialogsList);
@@ -78,7 +81,17 @@ public class DialogsListActivity extends AppCompatActivity {
                 Picasso.get().load(url).into(imageView);
             }
         });
-        dialogsListView.setAdapter(dialogsListAdapter);
+        dialogsListAdapter.setOnDialogClickListener(new DialogsListAdapter.OnDialogClickListener() {
+            @Override
+            public void onDialogClick(IDialog dialog) {
+                String selectedRoomId = dialog.getId();
+                Intent intent = new Intent(DialogsListActivity.this, MessagesListActivity.class);
+                intent.putExtra(ChatRoom.CHAT_ROOM_ID, selectedRoomId);
+                startActivity(intent);
+                finish();
+                // TODO Go Back to previous page
+            }
+        });
     }
 
     @Override
@@ -104,7 +117,30 @@ public class DialogsListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        CHAT_ROOM_REF.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                dialogs.clear();
+                for (DataSnapshot mChatRoomSnapshot: dataSnapshot.getChildren()){
+                    ChatRoom chatRoom = mChatRoomSnapshot.getValue(ChatRoom.class);
+                    Log.i(TAG, "onDataChange: "  + chatRoom);
+                    if (chatRoom.containsCurrentUser(currentUser.getUid())){
+                        Dialog dialog = new Dialog(chatRoom.getId(),chatRoom.getMember());
+                        dialogs.add(dialog);
+                        Log.i(TAG, "onDataChange: " + dialogs);
+                    }
+                }
+                dialogsListAdapter.setItems(dialogs);
+                dialogsListView.setAdapter(dialogsListAdapter);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
@@ -155,52 +191,6 @@ public class DialogsListActivity extends AppCompatActivity {
     public void searchFriendByEmail(final String email){
         member.clear();
         set.clear();
-//        USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
-//                    if (userSnapshot.child(EMAIL).getValue().equals(email)){
-//                        friendNameTextView.setText(userSnapshot.child(NAME).getValue().toString());
-//                        // if already friends or not
-//                        String mFriendId = userSnapshot.child(ID).getValue().toString();
-//                        if (mFriendId.equals(CURRENT_USER.getUid())){
-//                            toast("Search your friends");
-//                            addButton.setEnabled(false);
-//                        } else {
-//                            User mFriend = userSnapshot.getValue(User.class);
-//                            User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
-//                            if (userSnapshot.child(FRIENDS_ID_LIST).getValue() != null) {
-//                                if (!mFriend.getFriendsIdList().contains(CURRENT_USER.getUid())){
-//                                    toast("new");
-//                                    addButton.setEnabled(true);
-//                                    addMember(mFriend);
-//                                    addMember(currentUser);
-//                                } else {
-//                                    toast("Search new user");
-//                                    addButton.setEnabled(false);
-//                                }
-//                            } else {
-//                                toast("new");
-//                                addButton.setEnabled(true);
-//                                addMember(mFriend);
-//                                addMember(currentUser);
-//                            }
-//                            break;
-//                        }
-//
-//                    }
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//                if (databaseError != null){
-//                    Log.e(TAG, "onCancelled: ", databaseError.toException() );
-//                }
-//            }
-//        });
         USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -209,20 +199,20 @@ public class DialogsListActivity extends AppCompatActivity {
                         friendNameTextView.setText(userSnapshot.child(NAME).getValue().toString());
                         // if already friends or not
                         String mFriendId = userSnapshot.child(ID).getValue().toString();
-                        if (mFriendId.equals(CURRENT_USER.getUid())){
+                        if (mFriendId.equals(currentUser.getUid())){
                             toast("Search your friends");
                             addButton.setEnabled(false);
                         } else {
                             User mFriend = userSnapshot.getValue(User.class);
-                            User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
+                            User currentUser = dataSnapshot.child(DialogsListActivity.this.currentUser.getUid()).getValue(User.class);
                             if (userSnapshot.child(FRIENDS_ID_LIST).getValue() != null) {
-                                if (!mFriend.getFriendsIdList().contains(CURRENT_USER.getUid())){
+                                if (!mFriend.getFriendsIdList().contains(DialogsListActivity.this.currentUser.getUid())){
                                     toast("new");
                                     addButton.setEnabled(true);
                                     Log.i(TAG, "onDataChange: " + mFriendId);
                                     Log.i(TAG, "onDataChange: " + mFriend);
                                     Log.i(TAG, "onDataChange: " + currentUser);
-                                    mFriend.addFriendToList(CURRENT_USER.getUid());
+                                    mFriend.addFriendToList(DialogsListActivity.this.currentUser.getUid());
                                     currentUser.addFriendToList(mFriendId);
                                     member.add(mFriend);
                                     member.add(currentUser);
@@ -236,7 +226,7 @@ public class DialogsListActivity extends AppCompatActivity {
                                 Log.i(TAG, "onDataChange: " + mFriendId);
                                 Log.i(TAG, "onDataChange: " + mFriend);
                                 Log.i(TAG, "onDataChange: " + currentUser);
-                                mFriend.addFriendToList(CURRENT_USER.getUid());
+                                mFriend.addFriendToList(DialogsListActivity.this.currentUser.getUid());
                                 currentUser.addFriendToList(mFriendId);
                                 member.add(mFriend);
                                 member.add(currentUser);

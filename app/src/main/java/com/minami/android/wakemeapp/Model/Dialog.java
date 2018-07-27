@@ -2,7 +2,6 @@ package com.minami.android.wakemeapp.Model;
 
 import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.commons.models.IMessage;
-import com.stfalcon.chatkit.commons.models.IUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,32 +14,18 @@ public class Dialog implements IDialog {
     private String id;
     private String dialogPhoto;
     private String dialogName;
-    private List<User> users;
+    private List<User> member = new ArrayList<>();
     private IMessage lastMessage;
     private int unreadCount;
 
     public Dialog() {
     }
 
-    public Dialog(String id, List<User> users) {
+    public Dialog(String id, List<User> member) {
         this.id = id;
-        this.users = users;
+        this.member = member;
     }
 
-    //    public Dialog(String id, List<User> member) {
-//        super(id, member);
-//    }
-
-    public Dialog(String id, String name, String photo,
-                  List<User> users, IMessage lastMessage, int unreadCount) {
-
-        this.id = id;
-        this.dialogName = name;
-        this.dialogPhoto = photo;
-        this.users = users;
-        this.lastMessage = lastMessage;
-        this.unreadCount = unreadCount;
-    }
 
     @Override
     public String getId() {
@@ -59,7 +44,7 @@ public class Dialog implements IDialog {
 
     @Override
     public List<User> getUsers() {
-        return users;
+        return member;
     }
 
     @Override
