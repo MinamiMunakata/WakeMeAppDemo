@@ -1,5 +1,7 @@
 package com.minami.android.wakemeapp.Model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +10,7 @@ import java.util.List;
  */
 
 public class ChatRoom {
+    private static final String TAG = "ChatRoom";
     private String id;
     private List<User> member = new ArrayList<>();
     private List<Message> messages = new ArrayList<>();

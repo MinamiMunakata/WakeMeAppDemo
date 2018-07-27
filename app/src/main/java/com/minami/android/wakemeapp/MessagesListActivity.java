@@ -4,40 +4,61 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.ListView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.minami.android.wakemeapp.Model.Author;
+import com.minami.android.wakemeapp.Model.ChatRoom;
 import com.minami.android.wakemeapp.Model.Message;
+import com.minami.android.wakemeapp.Model.Text;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
-import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.messages.MessageInput;
 import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.minami.android.wakemeapp.Controller.DBController.CHAT_ROOM_REF;
+import static com.minami.android.wakemeapp.Controller.DBController.MESSAGE_REF;
+import static com.minami.android.wakemeapp.Controller.DBController.USER_REF;
 
 public class MessagesListActivity extends AppCompatActivity {
+    public static final String TAG = "MessagesListActivity";
     private MessagesListAdapter<Message> adapter;
     private String senderId;
     private ImageLoader imageLoader;
-    private MessagesList messagesList;
-    private FirebaseUser CURRENT_USER;
+    private MessagesList messagesListView;
+    private FirebaseUser currentUser;
+    private String chatRoomId;
+    private List<Message> messageList;
+    private List<User> member;
+    private User mSender;
+    private MessageInput input;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_list);
-        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+        messageList = new ArrayList<>();
+        member = new ArrayList<>();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        Intent intent = getIntent();
+        chatRoomId = intent.getStringExtra(ChatRoom.CHAT_ROOM_ID);
         imageLoader = new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
@@ -45,23 +66,66 @@ public class MessagesListActivity extends AppCompatActivity {
 //                Picasso.get(MessagesListActivity.this).load(url).into(imageView);
             }
         };
-        senderId = CURRENT_USER.getUid();
-        adapter =new MessagesListAdapter<Message>(senderId, null);
-        final User minami = new User("373", "minami");
-        messagesList = findViewById(R.id.messagesList);
-        MessageInput input = findViewById(R.id.input);
+        messagesListView = findViewById(R.id.messagesList);
+        input = findViewById(R.id.input);
+    }
+
+    private void sendMessage(final User sender, MessageInput input) {
+        Log.i(TAG, "sendMessage: 5555555555555");
         input.setInputListener(new MessageInput.InputListener() {
             @Override
             public boolean onSubmit(CharSequence input) {
                 //validate and send message
                 String input_text = input.toString();
-                Message message = new Message("373", minami, input_text);
+                String id = MESSAGE_REF.push().getKey();
+                Message message = new Message(id, sender, input_text);
+                Text text = message;
                 adapter.addToStart(message, true);
+                Log.i(TAG, "onSubmit: 6666666666666" + message);
+
+                MESSAGE_REF.child(id).setValue(text);
+                Log.i(TAG, "onSubmit: 6666666666666" + message);
                 return true;
             }
         });
-        messagesList.setAdapter(adapter);
-        // TODO connect to database
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        senderId = currentUser.getUid();
+        MESSAGE_REF.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                messageList.clear();
+                for (DataSnapshot messageSnapshot: dataSnapshot.child(chatRoomId).getChildren()){
+                    Message message = messageSnapshot.getValue(Message.class);
+                    messageList.add(message);
+                }
+                adapter = new MessagesListAdapter<Message>(senderId, null);
+                adapter.addToEnd(messageList, true);
+                messagesListView.setAdapter(adapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User sender = dataSnapshot.child(senderId).getValue(User.class);
+                Log.i(TAG, "onDataChange: " + sender);
+                sendMessage(sender, input);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -82,16 +146,7 @@ public class MessagesListActivity extends AppCompatActivity {
                 });
         return true;
     }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
 
-        // TODO read DB
-//        adapter.addToStart(, true);
-//        adapter = new MessagesListAdapter<>(senderId, imageLoader);
-//        messagesList.setAdapter(adapter);
-    }
 
     private void launchLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);

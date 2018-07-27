@@ -28,6 +28,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.minami.android.wakemeapp.Controller.DBController;
 import com.minami.android.wakemeapp.Model.ChatRoom;
 import com.minami.android.wakemeapp.Model.Dialog;
 import com.minami.android.wakemeapp.Model.User;
@@ -60,7 +61,6 @@ public class DialogsListActivity extends AppCompatActivity {
     private AlertDialog alertDialog;
     private ImageButton searchButton;
     private Button addButton;
-    private ArrayList<User> currentUserHolder;
     private FirebaseUser currentUser;
     private List<Dialog> dialogs;
 
@@ -69,7 +69,19 @@ public class DialogsListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseAuth.AuthStateListener mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user == null) {
+                    launchLoginActivity();
+                } else {
+                    currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+                }
+            }
+        };
+
 
         dialogs = new ArrayList<>();
         member = new ArrayList<>();
@@ -118,30 +130,35 @@ public class DialogsListActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        CHAT_ROOM_REF.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                dialogs.clear();
-                for (DataSnapshot mChatRoomSnapshot: dataSnapshot.getChildren()){
-                    ChatRoom chatRoom = mChatRoomSnapshot.getValue(ChatRoom.class);
-                    Log.i(TAG, "onDataChange: "  + chatRoom);
-                    if (chatRoom.containsCurrentUser(currentUser.getUid())){
-                        Dialog dialog = new Dialog(chatRoom.getId(),chatRoom.getMember());
-                        dialogs.add(dialog);
-                        Log.i(TAG, "onDataChange: " + dialogs);
+        if (currentUser == null){
+            launchLoginActivity();
+        } else {
+            CHAT_ROOM_REF.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    dialogs.clear();
+                    for (DataSnapshot mChatRoomSnapshot: dataSnapshot.getChildren()){
+                        ChatRoom chatRoom = mChatRoomSnapshot.getValue(ChatRoom.class);
+                        Log.i(TAG, "onDataChange: "  + chatRoom);
+                        if (chatRoom.containsCurrentUser(currentUser.getUid())){
+                            Dialog dialog = new Dialog(chatRoom.getId(),chatRoom.getMember());
+                            dialogs.add(dialog);
+                            Log.i(TAG, "onDataChange: " + dialogs);
+                        }
                     }
+                    dialogsListAdapter.setItems(dialogs);
+                    dialogsListView.setAdapter(dialogsListAdapter);
+
                 }
-                dialogsListAdapter.setItems(dialogs);
-                dialogsListView.setAdapter(dialogsListAdapter);
 
-            }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
 
-            }
-        });
 
+        }
     }
 
     private void launchLoginActivity() {
@@ -258,11 +275,6 @@ public class DialogsListActivity extends AppCompatActivity {
             member.add(user);
             set.add(user);
         }
-    }
-
-    private void addCurrentUser(User user){
-        currentUserHolder.clear();
-        currentUserHolder.add(user);
     }
 
     private void toast(String msg) {

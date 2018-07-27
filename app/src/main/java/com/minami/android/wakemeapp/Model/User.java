@@ -28,7 +28,6 @@ public class User implements IUser {
     public User(String id, String name) {
         this.id = id;
         this.name = name;
-//        friends = new HashSet<>();
     }
 
     public User(String id, String name, String email) {
@@ -37,21 +36,8 @@ public class User implements IUser {
         this.email = email;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String getAvatar() {
-        return avator;
     }
 
     public void setName(String name) {
@@ -144,5 +130,20 @@ public class User implements IUser {
     @Override
     public int hashCode() {
         return email.length() * 37;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getAvatar() {
+        return avator;
     }
 }
