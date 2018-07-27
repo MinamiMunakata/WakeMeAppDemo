@@ -43,4 +43,13 @@ public class ChatRoom {
     public void setMessages(List<Message> messages) {
         this.messages = messages;
     }
+
+    @Override
+    public String toString() {
+        String participants = "";
+        for (User u: member){
+            participants += " : " + u;
+        }
+        return participants;
+    }
 }

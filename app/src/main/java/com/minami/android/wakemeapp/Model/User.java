@@ -19,7 +19,7 @@ public class User implements IUser {
     private String name;
     private String avator;
     private String email;
-    private List<ChatRoom> chatRooms;
+    private List<String> chatRoomsIdList;
     private List<String> friendsIdList = new ArrayList<>();
 
     public User() {
@@ -66,16 +66,16 @@ public class User implements IUser {
         this.email = email;
     }
 
-    public List<ChatRoom> getChatRooms() {
-        return chatRooms;
+    public List<String> getChatRoomsIdList() {
+        return chatRoomsIdList;
     }
 
-    public void setChatRooms(List<ChatRoom> chatRooms) {
-        this.chatRooms = chatRooms;
+    public void setChatRoomsIdList(List<String> chatRoomsIdList) {
+        this.chatRoomsIdList = chatRoomsIdList;
     }
 
-    public void addChatRoom(ChatRoom chatRoom) {
-        chatRooms.add(chatRoom);
+    public void addChatRoom(String chatRoomId) {
+        chatRoomsIdList.add(chatRoomId);
     }
 
     public List<String> getFriendsIdList() {

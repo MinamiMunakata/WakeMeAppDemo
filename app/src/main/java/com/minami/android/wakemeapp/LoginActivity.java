@@ -1,6 +1,7 @@
 package com.minami.android.wakemeapp;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,7 +10,7 @@ import com.facebook.appevents.AppEventsLogger;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
-import com.minami.android.wakemeapp.Config.Config;
+import com.google.firebase.auth.FirebaseUser;
 import com.minami.android.wakemeapp.Controller.DBController;
 
 import java.util.Arrays;
@@ -21,17 +22,30 @@ public class LoginActivity extends AppCompatActivity {
     private List<AuthUI.IdpConfig> providers;
     private AppEventsLogger logger;
     private static final String TAG = "LoginActivity";
-    private FirebaseAuth mAuth;
+    private FirebaseUser CURRENT_USER;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseAuth.AuthStateListener mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // Sign in logic here.
+                    DBController.addUserToDB(user, user.getUid());
+                } else {
+                    Log.i(TAG, "onAuthStateChanged: user is null");
+                }
+            }
+        };
         logger = AppEventsLogger.newLogger(this);
-        if (Config.CURRENT_USER != null) {
+        if (CURRENT_USER != null) {
             DBController.addUserToDB(
-                    Config.CURRENT_USER,
-                    Config.CURRENT_USER.getUid());
+                    CURRENT_USER,
+                    CURRENT_USER.getUid());
 
             Log.i(TAG, "onCreate: -------------- 1");
             // already signed in
@@ -65,7 +79,11 @@ public class LoginActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
                 Log.i(TAG, "onCreate: -------------- 4");
-
+                if (CURRENT_USER != null) {
+                    DBController.addUserToDB(CURRENT_USER, CURRENT_USER.getUid());
+                    Log.i(TAG, "onActivityResult: " + CURRENT_USER.getDisplayName());
+                }
+                Log.i(TAG, "onActivityResult: null?");
                 launchDialogsListActivity();
             } else {
                 // Sign in failed. If response is null the user canceled the
@@ -82,12 +100,13 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
         Log.i(TAG, "onCreate: -------------- 6");
 
-        if (Config.CURRENT_USER != null) {
-            final String id = Config.CURRENT_USER.getUid();
+        if (CURRENT_USER != null) {
+            final String id = CURRENT_USER.getUid();
             // check Real Time database
-            DBController.addUserToDB(Config.CURRENT_USER, id);
+            DBController.addUserToDB(CURRENT_USER, id);
             // already signed in
             launchDialogsListActivity();
         } else {

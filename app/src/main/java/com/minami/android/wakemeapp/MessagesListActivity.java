@@ -13,7 +13,7 @@ import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.minami.android.wakemeapp.Config.Config;
+import com.google.firebase.auth.FirebaseUser;
 import com.minami.android.wakemeapp.Model.Message;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
@@ -30,11 +30,14 @@ public class MessagesListActivity extends AppCompatActivity {
     private String senderId;
     private ImageLoader imageLoader;
     private MessagesList messagesList;
+    private FirebaseUser CURRENT_USER;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_list);
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
         imageLoader = new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
@@ -42,7 +45,7 @@ public class MessagesListActivity extends AppCompatActivity {
 //                Picasso.get(MessagesListActivity.this).load(url).into(imageView);
             }
         };
-        senderId = Config.CURRENT_USER.getUid();
+        senderId = CURRENT_USER.getUid();
         adapter =new MessagesListAdapter<Message>(senderId, null);
         final User minami = new User("373", "minami");
         messagesList = findViewById(R.id.messagesList);
@@ -73,7 +76,7 @@ public class MessagesListActivity extends AppCompatActivity {
                 .signOut(this)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
-                        // ...
+                        // logout
                         launchLoginActivity();
                     }
                 });
@@ -82,6 +85,8 @@ public class MessagesListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+
         // TODO read DB
 //        adapter.addToStart(, true);
 //        adapter = new MessagesListAdapter<>(senderId, imageLoader);

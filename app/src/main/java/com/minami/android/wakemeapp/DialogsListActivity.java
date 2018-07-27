@@ -22,6 +22,8 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -58,11 +60,15 @@ public class DialogsListActivity extends AppCompatActivity {
     private ImageButton searchButton;
     private Button addButton;
     private ArrayList<User> currentUserHolder;
+    private FirebaseUser CURRENT_USER;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+
         currentUserHolder = new ArrayList<>();
         member = new ArrayList<>();
         set = new HashSet<>();
@@ -96,6 +102,12 @@ public class DialogsListActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        CURRENT_USER = FirebaseAuth.getInstance().getCurrentUser();
+
+    }
 
     private void launchLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
@@ -190,7 +202,7 @@ public class DialogsListActivity extends AppCompatActivity {
 //                }
 //            }
 //        });
-        USER_REF.addValueEventListener(new ValueEventListener() {
+        USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()){
@@ -234,10 +246,11 @@ public class DialogsListActivity extends AppCompatActivity {
                             break;
                         }
 
-                    } else if (member.size() < 2){
-                        // no match user
-                        toast("No one is found");
                     }
+//                    else if (member.size() < 2){
+//                        // no match user
+//                        toast("No one is found");
+//                    }
                 }
             }
 
