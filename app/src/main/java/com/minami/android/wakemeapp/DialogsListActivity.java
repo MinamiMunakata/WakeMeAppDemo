@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static com.minami.android.wakemeapp.Config.Config.CURRENT_USER;
 import static com.minami.android.wakemeapp.Controller.DBController.CHAT_ROOM_REF;
 import static com.minami.android.wakemeapp.Controller.DBController.EMAIL;
 import static com.minami.android.wakemeapp.Controller.DBController.FRIENDS_ID_LIST;
@@ -284,39 +283,8 @@ public class DialogsListActivity extends AppCompatActivity {
     }
 
     public void createDialog(View view) {
-//         no match user
-//        if (TextUtils.isEmpty(friendNameTextView.getText().toString())) {
-//            toast("No one is found");
-//        }
-//        Log.i(TAG, "createDialog: How are you?");
-//        USER_REF.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                Log.i(TAG, "onDataChange: Excuse me???");
-//                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-//                    if (userSnapshot.child(EMAIL).getValue().equals(searchBox.getText().toString())) {
-//                        String mFriendId = userSnapshot.child(ID).getValue().toString();
-//                        Log.i(TAG, "onDataChange: " + mFriendId);
-//                        User mFriend = userSnapshot.getValue(User.class);
-//                        Log.i(TAG, "onDataChange: " + mFriend);
-//                        User currentUser = dataSnapshot.child(CURRENT_USER.getUid()).getValue(User.class);
-//                        Log.i(TAG, "onDataChange: " + currentUser);
-//                        mFriend.addFriendToList(CURRENT_USER.getUid());
-//                        currentUser.addFriendToList(mFriendId);
-//                        member.add(mFriend);
-//                        member.add(currentUser);
-//                    }
-//                }
-//            }
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                if (databaseError != null){
-//                    Log.e(TAG, "onCancelled: ", databaseError.toException() );
-//                }
-//            }
-//        });
-        updateFriendList();
         String chat_id = CHAT_ROOM_REF.push().getKey();
+        updateUser(chat_id);
         ChatRoom mChatRoom = new ChatRoom(chat_id, member);
         CHAT_ROOM_REF.child(chat_id).setValue(mChatRoom);
         Dialog dialog = new Dialog(chat_id, member);
@@ -325,10 +293,11 @@ public class DialogsListActivity extends AppCompatActivity {
         alertDialog.dismiss();
     }
 
-    private void updateFriendList() {
+    private void updateUser(String chatRoomId) {
         for (User user: member){
-            Log.i(TAG, "updateFriendList: " + user.getFriendsIdList());
-            USER_REF.child(user.getId()).child(FRIENDS_ID_LIST).setValue(user.getFriendsIdList(), new DatabaseReference.CompletionListener() {
+            Log.i(TAG, "updateUser: " + user.getFriendsIdList());
+            user.addChatRoom(chatRoomId);
+            USER_REF.child(user.getId()).setValue(user, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
                     toast("Successfully added");

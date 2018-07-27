@@ -19,7 +19,7 @@ public class User implements IUser {
     private String name;
     private String avator;
     private String email;
-    private List<String> chatRoomsIdList;
+    private List<String> chatRoomsIdList = new ArrayList<>();
     private List<String> friendsIdList = new ArrayList<>();
 
     public User() {
@@ -74,8 +74,23 @@ public class User implements IUser {
         this.chatRoomsIdList = chatRoomsIdList;
     }
 
-    public void addChatRoom(String chatRoomId) {
-        chatRoomsIdList.add(chatRoomId);
+    public void addChatRoom(String newChatRoomId) {
+        List<String> updatedChatRoomIdList = new ArrayList<>();
+        if (chatRoomsIdList.size() > 0) {
+            HashSet<String> set = new HashSet<>();
+            for (String id : chatRoomsIdList) {
+                if (!set.contains(id)) {
+                    set.add(id);
+                    updatedChatRoomIdList.add(id);
+                    Log.i(TAG, "addChatRoom: -----------1");
+                }
+            }
+            if (!set.contains(newChatRoomId)){
+                updatedChatRoomIdList.add(newChatRoomId);
+            }
+        } else {
+            chatRoomsIdList.add(newChatRoomId);
+        }
     }
 
     public List<String> getFriendsIdList() {
@@ -86,7 +101,7 @@ public class User implements IUser {
         this.friendsIdList = friendsIdList;
     }
 
-    public void addFriendToList(String friendId){
+    public void addFriendToList(String newFriendId){
         List<String> updatedFriendsIdList = new ArrayList<>();
         if (friendsIdList.size() > 0) {
             HashSet<String> set = new HashSet<>();
@@ -97,15 +112,15 @@ public class User implements IUser {
                     Log.i(TAG, "addFriendToList: addddddd");
                 }
             }
-            if (!set.contains(friendId) && !friendId.equals(this.id)){
-                updatedFriendsIdList.add(friendId);
+            if (!set.contains(newFriendId) && !newFriendId.equals(this.id)){
+                updatedFriendsIdList.add(newFriendId);
                 setFriendsIdList(updatedFriendsIdList);
             }
         } else {
 
-            friendsIdList.add(friendId);
+            friendsIdList.add(newFriendId);
 
-            Log.i(TAG, "addFriendToList: " + friendId);
+            Log.i(TAG, "addFriendToList: " + newFriendId);
             Log.i(TAG, "addFriendToList: " + this.id);
             Log.i(TAG, "addFriendToList: " + friendsIdList);
             Log.i(TAG, "addFriendToList: heeeeeeeeeeeeeeey");
