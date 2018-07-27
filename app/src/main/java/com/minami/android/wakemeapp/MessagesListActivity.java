@@ -16,12 +16,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.minami.android.wakemeapp.Model.Author;
+import com.minami.android.wakemeapp.Controller.MessageController;
 import com.minami.android.wakemeapp.Model.ChatRoom;
 import com.minami.android.wakemeapp.Model.Message;
-import com.minami.android.wakemeapp.Model.Text;
 import com.minami.android.wakemeapp.Model.User;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
@@ -44,7 +42,7 @@ public class MessagesListActivity extends AppCompatActivity {
     private MessagesList messagesListView;
     private FirebaseUser currentUser;
     private String chatRoomId;
-    private List<Message> messageList;
+    private List<Message> messages;
     private List<User> member;
     private User mSender;
     private MessageInput input;
@@ -54,7 +52,7 @@ public class MessagesListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_list);
-        messageList = new ArrayList<>();
+        messages = new ArrayList<>();
         member = new ArrayList<>();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         Intent intent = getIntent();
@@ -66,6 +64,7 @@ public class MessagesListActivity extends AppCompatActivity {
 //                Picasso.get(MessagesListActivity.this).load(url).into(imageView);
             }
         };
+        senderId = currentUser.getUid();
         messagesListView = findViewById(R.id.messagesList);
         input = findViewById(R.id.input);
     }
@@ -79,11 +78,8 @@ public class MessagesListActivity extends AppCompatActivity {
                 String input_text = input.toString();
                 String id = MESSAGE_REF.push().getKey();
                 Message message = new Message(id, sender, input_text);
-                Text text = message;
+                MessageController.archiveMessage(chatRoomId, message);
                 adapter.addToStart(message, true);
-                Log.i(TAG, "onSubmit: 6666666666666" + message);
-
-                MESSAGE_REF.child(id).setValue(text);
                 Log.i(TAG, "onSubmit: 6666666666666" + message);
                 return true;
             }
@@ -94,18 +90,20 @@ public class MessagesListActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        senderId = currentUser.getUid();
         MESSAGE_REF.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                messageList.clear();
+                Log.i(TAG, "onDataChange: 11111111111111111111");
+                messages.clear();
                 for (DataSnapshot messageSnapshot: dataSnapshot.child(chatRoomId).getChildren()){
-                    Message message = messageSnapshot.getValue(Message.class);
-                    messageList.add(message);
+                    MessageController.Archive archive = messageSnapshot.getValue(MessageController.Archive.class);
+                    messages.add(MessageController.convertToMessageFromArchive(archive));
                 }
-                adapter = new MessagesListAdapter<Message>(senderId, null);
-                adapter.addToEnd(messageList, true);
+                Log.i(TAG, "onDataChange: 22222222222222222222" + member);
+                adapter =new MessagesListAdapter<Message>(senderId, null);
+                adapter.addToEnd(messages, true);
                 messagesListView.setAdapter(adapter);
+                Log.i(TAG, "onDataChange: 44444444444444444");
             }
 
             @Override
@@ -116,9 +114,9 @@ public class MessagesListActivity extends AppCompatActivity {
         USER_REF.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User sender = dataSnapshot.child(senderId).getValue(User.class);
-                Log.i(TAG, "onDataChange: " + sender);
+                User sender = dataSnapshot.child(currentUser.getUid()).getValue(User.class);
                 sendMessage(sender, input);
+
             }
 
             @Override

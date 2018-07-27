@@ -1,5 +1,7 @@
 package com.minami.android.wakemeapp.Model;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.commons.models.IMessage;
 
@@ -39,7 +41,14 @@ public class Dialog implements IDialog {
 
     @Override
     public String getDialogName() {
-        return dialogName;
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String name = "";
+        for (User user: member){
+            if (!user.getId().equals(currentUser.getUid())){
+                name += user.getName() + " ";
+            }
+        }
+        return name;
     }
 
     @Override

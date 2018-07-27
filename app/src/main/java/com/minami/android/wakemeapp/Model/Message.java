@@ -3,7 +3,6 @@ package com.minami.android.wakemeapp.Model;
 import android.support.annotation.Nullable;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
-import com.stfalcon.chatkit.commons.models.IUser;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import java.util.Date;
@@ -12,25 +11,24 @@ import java.util.Date;
  * Created by Minami on 2018/07/19.
  */
 
-public class Message extends Text implements IMessage, MessageContentType.Image {
+public class Message implements IMessage, MessageContentType.Image {
 
     private String id;
     private String text;
     private Date createdAt;
-    private User sender;
+    private User user;
     private Image image;
 
-    public Message() {
-    }
-
-    public Message(String id, User sender, String text) {
-        super(id, sender, text);
+    public Message(String id, User user, String text) {
+        this.id = id;
+        this.user = user;
+        this.text = text;
         this.createdAt = new Date();
     }
 
-    public Message(String id, User sender, String text, Date createdAt) {
+    public Message(String id, User user, String text, Date createdAt) {
         this.id = id;
-        this.sender = sender;
+        this.user = user;
         this.text = text;
         this.createdAt = createdAt;
     }
@@ -47,7 +45,7 @@ public class Message extends Text implements IMessage, MessageContentType.Image 
 
     @Override
     public User getUser() {
-        return sender;
+        return user;
     }
 
     @Override
@@ -77,6 +75,10 @@ public class Message extends Text implements IMessage, MessageContentType.Image 
         this.image = image;
     }
 
+    public Image getImage() {
+        return image;
+    }
+
     public static class Image {
 
         private String url;
@@ -84,10 +86,5 @@ public class Message extends Text implements IMessage, MessageContentType.Image 
         public Image(String url) {
             this.url = url;
         }
-    }
-
-    @Override
-    public String toString() {
-        return text;
     }
 }
