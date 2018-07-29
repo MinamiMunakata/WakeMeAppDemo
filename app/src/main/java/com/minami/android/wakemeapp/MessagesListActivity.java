@@ -116,12 +116,9 @@ public class MessagesListActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User sender = dataSnapshot.child(currentUser.getUid()).getValue(User.class);
                 sendMessage(sender, input);
-
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }

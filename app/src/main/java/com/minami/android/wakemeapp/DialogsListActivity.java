@@ -100,8 +100,7 @@ public class DialogsListActivity extends AppCompatActivity {
                 Intent intent = new Intent(DialogsListActivity.this, MessagesListActivity.class);
                 intent.putExtra(ChatRoom.CHAT_ROOM_ID, selectedRoomId);
                 startActivity(intent);
-                finish();
-                // TODO Go Back to previous page
+//                finish();
             }
         });
     }
@@ -164,13 +163,13 @@ public class DialogsListActivity extends AppCompatActivity {
     private void launchLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
-        finish();
+//        finish();
     }
 
     private void launchMessagesListActivity() {
         Intent intent = new Intent(this, MessagesListActivity.class);
         startActivity(intent);
-        finish();
+//        finish();
     }
 
     public void showFindFriendDialog(View view) {
