@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:tools="http://schemas.android.com/tools"
+<menu 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/setting_button"
+        android:icon="?android:attr/actionModePasteDrawable"
+        android:title="setting"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/logout_button"
         android:icon="@drawable/ic_logout"
         android:title="logout"
-        app:showAsAction="always"></item>
+        app:showAsAction="always" />
 
 </menu>

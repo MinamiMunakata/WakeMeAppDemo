@@ -113,16 +113,29 @@ public class DialogsListActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // logout
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    public void onComplete(@NonNull Task<Void> task) {
-                        // ...
-                        launchLoginActivity();
-                    }
-                });
-        return true;
+        switch (item.getItemId()) {
+            case R.id.logout_button:
+                // logout
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // ...
+                                launchLoginActivity();
+                            }
+                        });
+                return true;
+
+            case R.id.setting_button:
+                launchSettingActivity();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     @Override
@@ -162,6 +175,12 @@ public class DialogsListActivity extends AppCompatActivity {
 
     private void launchLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+//        finish();
+    }
+
+    private void launchSettingActivity() {
+        Intent intent = new Intent(this, SettingActivity.class);
         startActivity(intent);
 //        finish();
     }
